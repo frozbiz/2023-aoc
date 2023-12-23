@@ -25,15 +25,24 @@ fun main() {
         return sum
     }
 
+    fun <K> MutableMap<K, Int>.increment(index: K, step: Int = 1): Int {
+        val next = getOrDefault(index, 0) + step
+        set(index, next)
+        return next
+    }
+
     fun part2(input: List<String>): Int {
-        var sum = 0
-//        for (value in input) {
-//            val (_, rgb) = parse(value)
-//            val power = rgb.power()
-////            power.println()
-//            sum += power
-//        }
-        return sum
+        val cardArray = mutableMapOf<Int, Int>()
+        for (value in input) {
+            val (cardNo, winners, numbersWeHave) = parse(value)
+            val cards = cardArray.increment(cardNo)
+            val winningNumbers = winners intersect numbersWeHave
+            for (ix in (cardNo + 1)..(cardNo + winningNumbers.size)) {
+//                "Bumping $ix by $cards".println()
+                cardArray.increment(ix, cards)
+            }
+        }
+        return cardArray.values.sum()
     }
 
     // test if implementation meets criteria from the description, like:
@@ -47,21 +56,10 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
     """.trimIndent().split("\n")
 
     check(part1(testInput) == 13)
-    check(part2(testInput) == 0)
+    check(part2(testInput) == 30)
 
-//    val testInputTwo = """
-//        two1nine
-//        eightwothree
-//        abcone2threexyz
-//        xtwone3four
-//        4nineeightseven2
-//        zoneight234
-//        7pqrstsixteen
-//    """.trimIndent().split("\\s+".toRegex())
-//
-//    check(part2(testInputTwo) == 281)
 
     val input = readInput("Day04")
     part1(input).println()
-//    part2(input).println()
+    part2(input).println()
 }
