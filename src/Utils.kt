@@ -298,3 +298,9 @@ data class MultiRange (
         }
     }
 }
+
+fun <K> MutableMap<K, Int>.increment(index: K, step: Int = 1): Int {
+    val next = getOrDefault(index, 0) + step
+    set(index, next)
+    return next
+}
