@@ -166,3 +166,135 @@ class Grid<T>(
         return grid.flatMap { (y, dict) -> dict.map { (x, count) -> Pair(Pair(x,y), count) } }
     }
 }
+
+fun LongRange(start: Long, length: Long): LongRange = start..<(start+length)
+
+data class MultiRange (
+    val rangeList: MutableList<LongRange> = mutableListOf()
+){
+    operator fun plusAssign(range: LongRange) {
+        add(range)
+    }
+
+    operator fun plusAssign(newRange: MultiRange) {
+        for (range in newRange.rangeList) {
+            add(range)
+        }
+    }
+
+    operator fun plus(range: LongRange): MultiRange {
+        val ret = MultiRange()
+        ret.rangeList.addAll(rangeList)
+        ret.add(range)
+        return ret
+    }
+
+    fun add(multiRange: MultiRange) {
+        for (range in multiRange.rangeList) {
+            add(range)
+        }
+    }
+
+    fun add(range: LongRange) {
+        if (range.size <= 0) return
+        var ix = 0
+        var firstOverlapIx: Int? = null
+        while ((ix < rangeList.size) && (rangeList[ix].first - 1 <= range.last)) {
+            // if they overlap
+            if ((range.first - 1 <= rangeList[ix].last) && (firstOverlapIx == null)) {
+                firstOverlapIx = ix
+            }
+            ++ix
+        }
+        if (firstOverlapIx == null) {
+            rangeList.add(ix, range)
+        } else {
+            val lastOverlap = ix - 1
+            val newRange = minOf(range.first, rangeList[firstOverlapIx].first)..maxOf(range.last, rangeList[lastOverlap].last)
+            rangeList[firstOverlapIx] = newRange
+            if (firstOverlapIx < lastOverlap) {
+                rangeList.subList(firstOverlapIx+1, ix).clear()
+            }
+        }
+    }
+
+    fun first(): Long = rangeList.first().first
+
+    fun firstOrNull(): Long? = rangeList.firstOrNull()?.first
+
+    val LongRange.size: Long
+        get() = maxOf(last - first + 1, 0)
+
+    operator fun minusAssign(points: Collection<Long>) {
+        for (point in points) {
+            subtract(point)
+        }
+    }
+
+    operator fun minusAssign(point: Long) {
+        subtract(point)
+    }
+
+    fun subtract(point: Long) {
+        val ix = rangeList.indexOfFirst { point in it }
+        if (ix >= 0) {
+            val range = rangeList[ix]
+            if (range.count() == 1) {
+                rangeList.removeAt(ix)
+            } else if (range.first == point) {
+                rangeList[ix] = (point + 1)..range.last
+            } else if (range.last == point) {
+                rangeList[ix] = range.first..<point
+            } else {
+                rangeList[ix] = range.first..<point
+                rangeList.add(ix+1, (point + 1)..range.last)
+            }
+        }
+    }
+
+    fun subtract(range: LongRange): MultiRange {
+        val startIx = rangeList.indexOfFirst { range.first <= it.last }
+        val endIx = rangeList.indexOfLast { range.last >= it.first }
+        if (startIx < 0 || endIx < 0) return MultiRange()
+
+        val firstValue = rangeList[startIx].first
+        val lastValue = rangeList[endIx].last
+
+        val ret = MultiRange(rangeList.subList(startIx, endIx+1).toMutableList())
+        ret.trimToRange(range)
+        rangeList.subList(startIx, endIx+1).clear()
+        if (lastValue > range.last) {
+            rangeList.add(startIx, range.last+1..lastValue)
+        }
+        if (firstValue < range.first) {
+            rangeList.add(startIx, firstValue..<range.first)
+        }
+
+        return ret
+    }
+
+    fun clear() {
+        rangeList.clear()
+    }
+
+    operator fun contains(v: Int): Boolean {
+        return rangeList.any { v in it }
+    }
+
+    fun count(): Int {
+        return rangeList.map { it.count() }.sum()
+    }
+
+    fun trimToRange(range: LongRange) {
+        rangeList.removeIf { it.last < range.first || range.last < it.first }
+        if (rangeList.isEmpty()) return
+        val first = rangeList.first()
+        if (first.first < range.first) {
+            rangeList[0] = range.first .. first.last
+        }
+        val last = rangeList.last()
+        if (last.last > range.last) {
+            rangeList[rangeList.size - 1] = last.first .. range.last
+        }
+    }
+}

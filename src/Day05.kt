@@ -12,7 +12,7 @@ fun String.toSeedMap(): SeedMap {
     val (dest, src, len) = split("\\s+".toRegex()).mapNotNull(String::toLong)
     return SeedMap(
         offset = dest - src,
-        range = src..<(src+len)
+        range = LongRange(start = src, length = len)
     )
 }
 
@@ -35,7 +35,7 @@ fun main() {
         return seeds to mapList
     }
 
-    fun Long.transformBy(seedMaps: SeedMaps): Long {
+    fun Long.transformedBy(seedMaps: SeedMaps): Long {
         for (seedMap in seedMaps) {
             if (this in seedMap) {
                 return this + seedMap.offset
@@ -48,24 +48,43 @@ fun main() {
         var (seeds, seedMapList) = parse(input)
 //        seeds.println()
         for (seedMaps in seedMapList) {
-            seeds = seeds.map { it.transformBy(seedMaps) }
+            seeds = seeds.map { it.transformedBy(seedMaps) }
 //            seeds.println()
         }
         return seeds.min()
     }
 
-    fun part2(input: List<String>): Int {
-        val cardArray = mutableMapOf<Int, Int>()
-//        for (value in input) {
-//            val (cardNo, winners, numbersWeHave) = parse(value)
-//            val cards = cardArray.increment(cardNo)
-//            val winningNumbers = winners intersect numbersWeHave
-//            for (ix in (cardNo + 1)..(cardNo + winningNumbers.size)) {
-////                "Bumping $ix by $cards".println()
-//                cardArray.increment(ix, cards)
-//            }
-//        }
-        return cardArray.values.sum()
+    fun MultiRange.applyOffset(offset: Long) {
+        for (ix in 0..<rangeList.size) {
+            val range = rangeList[ix]
+            rangeList[ix] = (range.first + offset)..(range.last + offset)
+        }
+    }
+
+    fun MultiRange.transformedBy(seedMaps: SeedMaps): MultiRange {
+        val input = this.copy()
+        val output = MultiRange()
+
+        for (seedMap in seedMaps) {
+            val newRange = input.subtract(seedMap.range)
+            newRange.applyOffset(seedMap.offset)
+            output += newRange
+        }
+        output += input
+        return output
+    }
+
+    fun part2(input: List<String>): Long {
+        val (seedRanges, seedMapList) = parse(input)
+        var seeds = MultiRange()
+        for (ix in seedRanges.indices step 2) {
+            seeds.add(LongRange(start = seedRanges[ix], length = seedRanges[ix+1]))
+        }
+        for (seedMaps in seedMapList) {
+            seeds = seeds.transformedBy(seedMaps)
+//            seeds.println()
+        }
+        return seeds.first()
     }
 
     // test if implementation meets criteria from the description, like:
@@ -106,10 +125,10 @@ humidity-to-location map:
     """.trimIndent().split("\n")
 
     check(part1(testInput) == 35L)
-    check(part2(testInput) == 0)
+    check(part2(testInput) == 46L)
 
 
     val input = readInput("Day05")
     part1(input).println()
-//    part2(input).println()
+    part2(input).println()
 }
