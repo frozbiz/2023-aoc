@@ -162,8 +162,8 @@ class Grid<T>(
         return grid.toString()
     }
 
-    fun allPoints(): List<Pair<Pair<Int, Int>, T>> {
-        return grid.flatMap { (y, dict) -> dict.map { (x, count) -> Pair(Pair(x,y), count) } }
+    fun allPoints(): List<Pair<Point, T>> {
+        return grid.flatMap { (y, dict) -> dict.map { (x, value) -> Pair(Point(x,y), value) } }
     }
 }
 
@@ -303,4 +303,27 @@ fun <K> MutableMap<K, Int>.increment(index: K, step: Int = 1): Int {
     val next = getOrDefault(index, 0) + step
     set(index, next)
     return next
+}
+
+enum class CardinalDirection {
+    NORTH, EAST, SOUTH, WEST;
+
+    val opposite: CardinalDirection
+        get() {
+            return when (this) {
+                NORTH -> SOUTH
+                SOUTH -> NORTH
+                EAST -> WEST
+                WEST -> EAST
+            }
+        }
+}
+
+fun Point.pointToThe(direction: CardinalDirection): Point {
+    return when (direction) {
+        CardinalDirection.NORTH -> Point(x, y - 1)
+        CardinalDirection.EAST -> Point(x + 1, y)
+        CardinalDirection.SOUTH -> Point(x, y + 1)
+        CardinalDirection.WEST -> Point(x - 1, y)
+    }
 }

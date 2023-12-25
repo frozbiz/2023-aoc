@@ -1,28 +1,5 @@
 import java.lang.IllegalStateException
 
-enum class CardinalDirection {
-    NORTH, EAST, SOUTH, WEST;
-
-    val opposite: CardinalDirection
-        get() {
-            return when (this) {
-                NORTH -> SOUTH
-                SOUTH -> NORTH
-                EAST -> WEST
-                WEST -> EAST
-            }
-        }
-}
-
-fun Point.pointToThe(direction: CardinalDirection): Point {
-    return when (direction) {
-        CardinalDirection.NORTH -> Point(x, y - 1)
-        CardinalDirection.EAST -> Point(x + 1, y)
-        CardinalDirection.SOUTH -> Point(x, y + 1)
-        CardinalDirection.WEST -> Point(x - 1, y)
-    }
-}
-
 data class Pipe (
     val openings: Set<CardinalDirection>
 ) {
