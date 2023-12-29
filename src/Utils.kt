@@ -165,6 +165,16 @@ class Grid<T>(
     fun allPoints(): List<Pair<Point, T>> {
         return grid.flatMap { (y, dict) -> dict.map { (x, value) -> Pair(Point(x,y), value) } }
     }
+
+    val maxX: Int
+        get() = allPoints().maxOf { it.first.x }
+    val minX: Int
+        get() = allPoints().minOf { it.first.x }
+
+    val maxY: Int
+        get() = grid.keys.max()
+    val minY: Int
+        get() = grid.keys.min()
 }
 
 fun LongRange(start: Long, length: Long): LongRange = start..<(start+length)
