@@ -128,6 +128,7 @@ data class Point(
     fun manhattanDistanceTo(point: Point): Int {
         return (point.x - x).absoluteValue + (point.y - y).absoluteValue
     }
+
     override fun toString(): String {
         return "Point(${x}, ${y})"
     }
@@ -156,7 +157,7 @@ class Grid<T>(
         set(point.x, point.y, value)
     }
 
-    val grid = mutableMapOf<Int, MutableMap<Int, T>>()
+    private val grid = mutableMapOf<Int, MutableMap<Int, T>>()
 
     override fun toString(): String {
         return grid.toString()
@@ -175,6 +176,45 @@ class Grid<T>(
         get() = grid.keys.max()
     val minY: Int
         get() = grid.keys.min()
+
+    override fun hashCode(): Int {
+        return default.hashCode() + allPoints().sumOf {
+            if (it.second != default) {
+                it.second.hashCode() + it.first.hashCode()
+            } else 0
+        }
+    }
+
+    override operator fun equals(other: Any?): Boolean {
+        if (other !is Grid<*>) return false
+        if (other.default != default) return false
+        // check our points in theirs
+        for (point in allPoints()) {
+            if (other[point.first] != point.second) return false
+        }
+
+        // and theirs in ours
+        for (point in other.allPoints()) {
+            if (get(point.first) != point.second) return false
+        }
+
+        return true
+    }
+
+    fun copy(minimumCopy: Boolean = true): Grid<T> {
+        val duplicate = Grid(default)
+        // REVIEW: Should I make sure that we maintain minX/minY? Should we handle the bounds of a
+        // grid differently?
+        for (y in grid) {
+            for (x in y.value) {
+                if (!minimumCopy || x.value != default) {
+                    duplicate[x.key, y.key] = x.value
+                }
+            }
+        }
+
+        return duplicate
+    }
 }
 
 fun LongRange(start: Long, length: Long): LongRange = start..<(start+length)
