@@ -35,6 +35,29 @@ data class Point(
         return Point(other.x + x, other.y + y)
     }
 
+    val CardinalDirection.unitPoint: Point
+        get() {
+            return when (this) {
+                CardinalDirection.NORTH -> Point(0, -1)
+                CardinalDirection.EAST -> Point(1, 0)
+                CardinalDirection.SOUTH -> Point(0, 1)
+                CardinalDirection.WEST -> Point(-1, 0)
+            }
+        }
+
+    operator fun times(multiplier: Int): Point {
+        return Point(x * multiplier, y * multiplier)
+    }
+
+    operator fun plus(direction: CardinalDirection): Point {
+        return when (direction) {
+            CardinalDirection.NORTH -> Point(x, y - 1)
+            CardinalDirection.EAST -> Point(x + 1, y)
+            CardinalDirection.SOUTH -> Point(x, y + 1)
+            CardinalDirection.WEST -> Point(x - 1, y)
+        }
+    }
+
     companion object {
         fun fromString(str: String): Point{
             val (x, y) = str.split(',').map { it.trim().toInt() }
