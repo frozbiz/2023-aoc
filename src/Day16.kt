@@ -160,21 +160,24 @@ fun main() {
         val leftRays = (Point(left, top) to Point(left, bottom)).map { Ray(it, CardinalDirection.EAST) }
         val rightRays = (Point(right, top) to Point(right, bottom)).map { Ray(it, CardinalDirection.WEST) }
 
-
-
-        val rayGrid = Grid<Set<CardinalDirection>>(emptySet())
-        val rays = mutableSetOf(Ray(Point(0,0), CardinalDirection.EAST))
-        rayGrid.add(rays.first())
-        while (rays.isNotEmpty()) {
-            for (ray in mirrorGrid.nextRays(rays.pop())) {
-                if (ray !in rayGrid) {
-                    rays.add(ray)
-                    rayGrid.add(ray)
+        val resultSet = mutableMapOf<Ray, Int>()
+        for (start in topRays + bottomRays + leftRays + rightRays) {
+            val rayGrid = Grid<Set<CardinalDirection>>(emptySet())
+            val rays = mutableSetOf(start)
+            rayGrid.add(start)
+            while (rays.isNotEmpty()) {
+                for (ray in mirrorGrid.nextRays(rays.pop())) {
+                    if (ray !in rayGrid) {
+                        rays.add(ray)
+                        rayGrid.add(ray)
+                    }
                 }
             }
-        }
 //        rayGrid.print()
-        return rayGrid.allPoints().count { it.second.isNotEmpty() }
+            resultSet[start] = rayGrid.allPoints().count { it.second.isNotEmpty() }
+        }
+
+        return resultSet.values.max()
     }
 
     // test if implementation meets criteria from the description, like:
@@ -191,12 +194,18 @@ fun main() {
 ..//.|....
     """.trimIndent().split("\n")
 
-    check(part1(testInput1) == 46)
-//    check(part2(testInput1) == 145)
+    measureTime {
+        check(part1(testInput1) == 46)
+    }.println()
+    measureTime {
+        check(part2(testInput1) == 51)
+    }.println()
 //
     val input = readInput("Day16")
     measureTime {
         part1(input).println()
     }.println()
-//    part2(input).println()
+    measureTime {
+        part2(input).println()
+    }.println()
 }
