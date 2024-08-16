@@ -70,11 +70,6 @@ fun main() {
         return grid
     }
 
-    data class Ray(
-        val point: Point,
-        val direction: CardinalDirection
-    )
-
     fun Grid<Set<CardinalDirection>>.add(ray: Ray) {
         val current = get(ray.point)
         set(ray.point, current + ray.direction)

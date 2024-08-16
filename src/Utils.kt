@@ -168,8 +168,22 @@ class Grid<T>(
         return grid[y]?.get(x) ?: default
     }
 
+    private fun updateBounds(x: Int, y: Int) {
+        if (x < minX) {
+            minX = x
+        } else if (x > maxX) {
+            maxX = x
+        }
+        if (y < minY) {
+            minY = y
+        } else if (y > maxY) {
+            maxY = y
+        }
+    }
+
     operator fun set(x: Int, y: Int, value: T) {
         grid.getOrPut(y) { mutableMapOf() }[x] = value
+        updateBounds(x, y)
     }
 
     operator fun get(point: Point): T {
@@ -178,6 +192,13 @@ class Grid<T>(
 
     operator fun set(point: Point, value: T) {
         set(point.x, point.y, value)
+        updateBounds(point.x, point.y)
+    }
+
+    operator fun contains(point: Point): Boolean {
+        val xBounds = minX..maxX
+        val yBounds = minY..maxY
+        return point.x in xBounds && point.y in yBounds
     }
 
     private val grid = mutableMapOf<Int, MutableMap<Int, T>>()
@@ -190,15 +211,10 @@ class Grid<T>(
         return grid.flatMap { (y, dict) -> dict.map { (x, value) -> Pair(Point(x,y), value) } }
     }
 
-    val maxX: Int
-        get() = allPoints().maxOf { it.first.x }
-    val minX: Int
-        get() = allPoints().minOf { it.first.x }
-
-    val maxY: Int
-        get() = grid.keys.max()
-    val minY: Int
-        get() = grid.keys.min()
+    var maxX: Int = 0
+    var minX: Int = 0
+    var maxY: Int = 0
+    var minY: Int = 0
 
     override fun hashCode(): Int {
         return default.hashCode() + allPoints().sumOf {
@@ -400,3 +416,26 @@ fun Point.pointToThe(direction: CardinalDirection): Point {
         CardinalDirection.WEST -> Point(x - 1, y)
     }
 }
+
+fun CardinalDirection.char(): Char {
+    return when(this) {
+        CardinalDirection.NORTH -> '^'
+        CardinalDirection.EAST -> '>'
+        CardinalDirection.SOUTH -> 'v'
+        CardinalDirection.WEST -> '<'
+    }
+}
+
+fun Grid<CardinalDirection>.print() {
+    val xStart = minX
+    val xEnd = maxX
+    for (row in minY..maxY) {
+        (xStart..xEnd).forEach { print(get(it, row).char()) }
+        kotlin.io.println()
+    }
+}
+
+data class Ray(
+    val point: Point,
+    val direction: CardinalDirection
+)
